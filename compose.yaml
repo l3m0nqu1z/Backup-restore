@@ -1,0 +1,29 @@
+services:
+
+  db:
+    image: postgres:alpine${ALPINE_TAG}
+    shm_size: 128mb
+    environment:
+      POSTGRES_PASSWORD: ${PGPASSWORD}
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  sidecar:
+    depends_on:
+      db:
+        condition: service_healthy
+    build:
+      context: .
+      dockerfile: ./sidecar.Dockerfile
+      args:
+        ALPINE_TAG: ${ALPINE_TAG}
+    pull_policy: build
+    environment:
+      PGUSER: ${PGUSER}
+      PGHOST: ${PGHOST}
+      PGDATABASE: ${PGDATABASE}
+      PGPASSWORD: ${PGPASSWORD}
+      ACCESS_TOKEN: ${ACCESS_TOKEN}
